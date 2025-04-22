@@ -5,7 +5,6 @@ const port = 8080
 app.use(express.json())
 
 const players = {}
-
 const TIMEOUT = 20 * 1000
 
 setInterval(() => {
@@ -20,7 +19,7 @@ setInterval(() => {
 }, 5000)
 
 app.post('/sync', (req, res) => {
-    const { id, pos, ang, weapon, map, message } = req.body
+    const { id, pos, ang, weapon, map, state, steamid, nickname } = req.body
     if (!id) return res.status(400).json({ error: 'no id' })
 
     players[id] = {
@@ -28,7 +27,9 @@ app.post('/sync', (req, res) => {
         ang: ang || { p: 0, y: 0, r: 0 },
         weapon: weapon || 'none',
         map: map || 'unknown',
-        message: message || '',
+        state: state || 'idle',
+        steamid: steamid || 'unknown',
+        nickname: nickname || 'Unknown',
         lastUpdate: Date.now()
     }
 
@@ -43,9 +44,15 @@ app.post('/sync', (req, res) => {
 app.get('/status', (req, res) => {
     const online = Object.entries(players).map(([id, data]) => ({
         id,
-        map: data.map
+        map: data.map,
+        nickname: data.nickname,
+        steamid: data.steamid
     }))
     res.json({ online })
+})
+
+app.get('/', (req, res) => {
+    res.status(200).send('OK')
 })
 
 app.listen(port, () => {
