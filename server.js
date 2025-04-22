@@ -1,29 +1,33 @@
-const express = require('express')
-const app = express()
-const port = 8080
-const players = {}
+const express = require('express');
+const app = express();
+const port = 3000;
 
-app.use(express.json())
+let players = {};
+
+app.use(express.json());
 
 app.post('/sync', (req, res) => {
-  const data = req.body
-  const id = data.id
-  if (!id) return res.status(400).send('ID не указан')
+    const { id, pos, ang, weapon, message } = req.body;
 
-  // Сохраняем данные игрока
-  players[id] = { data }
-
-  // Отправляем всем игрокам информацию о других игроках
-  const others = {}
-  for (const [pid, obj] of Object.entries(players)) {
-    if (pid !== id && obj.data) {
-      others[pid] = obj.data
+    if (id) {
+        players[id] = {
+            pos,
+            ang,
+            weapon,
+            message
+        };
     }
-  }
 
-  res.json({ players: others })
-})
+    const otherPlayers = {};
+    for (const [pid, data] of Object.entries(players)) {
+        if (pid !== id) {
+            otherPlayers[pid] = data;
+        }
+    }
+
+    res.json({ type: 'sync', players: otherPlayers });
+});
 
 app.listen(port, () => {
-  console.log(`Сервер запущен на http://localhost:${port}`)
-})
+    console.log(`Server is running on http://localhost:${port}`);
+});
