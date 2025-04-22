@@ -6,6 +6,19 @@ app.use(express.json())
 
 const players = {}
 
+const TIMEOUT = 20 * 1000
+
+setInterval(() => {
+    const currentTime = Date.now()
+    for (const id in players) {
+        const player = players[id]
+        if (currentTime - player.lastUpdate > TIMEOUT) {
+            console.log(`Player ${id} timed out and is being removed`)
+            delete players[id]
+        }
+    }
+}, 5000)
+
 app.post('/sync', (req, res) => {
     const { id, pos, ang, weapon, map, message } = req.body
     if (!id) return res.status(400).json({ error: 'no id' })
@@ -15,7 +28,8 @@ app.post('/sync', (req, res) => {
         ang: ang || { p: 0, y: 0, r: 0 },
         weapon: weapon || 'none',
         map: map || 'unknown',
-        message: message || ''
+        message: message || '',
+        lastUpdate: Date.now()
     }
 
     const others = {}
