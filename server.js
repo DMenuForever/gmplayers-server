@@ -1,24 +1,28 @@
-const WebSocket = require('ws')
+const WebSocket = require("ws")
 const wss = new WebSocket.Server({ port: 8080 })
+const players = {}
 
-let players = {}
-
-wss.on('connection', function connection(ws) {
-  let id = Math.random().toString(36).substr(2, 9)
+wss.on("connection", function connection(ws) {
+  const id = Math.random().toString(36).substring(2, 9)
   players[id] = { ws, data: {} }
 
-  ws.on('message', function incoming(message) {
-    const data = JSON.parse(message)
-    players[id].data = data
+  ws.on("message", function incoming(message) {
+    try {
+      const data = JSON.parse(message)
+      players[id].data = data
+    } catch (e) {}
 
-    let others = Object.keys(players)
-      .filter(pid => pid !== id)
-      .map(pid => players[pid].data)
+    const others = {}
+    for (const [pid, obj] of Object.entries(players)) {
+      if (pid !== id && obj.data) {
+        others[pid] = obj.data
+      }
+    }
 
-    ws.send(JSON.stringify({ type: 'players', others }))
+    ws.send(JSON.stringify({ type: "sync", players: others }))
   })
 
-  ws.on('close', () => {
+  ws.on("close", () => {
     delete players[id]
   })
 })
