@@ -7,14 +7,15 @@ let players = {};
 app.use(express.json());
 
 app.post('/sync', (req, res) => {
-    const { id, pos, ang, weapon, message } = req.body;
+    const { id, pos, ang, weapon, message, map } = req.body;
 
     if (id) {
         players[id] = {
             pos,
             ang,
             weapon,
-            message
+            message,
+            map
         };
     }
 
@@ -26,6 +27,15 @@ app.post('/sync', (req, res) => {
     }
 
     res.json({ type: 'sync', players: otherPlayers });
+});
+
+app.get('/status', (req, res) => {
+    let statusHTML = '<h1>Онлайн Игроки</h1><ul>';
+    for (const [id, data] of Object.entries(players)) {
+        statusHTML += `<li>${id} - Карта: ${data.map}</li>`;
+    }
+    statusHTML += '</ul>';
+    res.send(statusHTML);
 });
 
 app.listen(port, () => {
