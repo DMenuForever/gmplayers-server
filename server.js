@@ -8,8 +8,7 @@ const players = {}
 
 app.post('/sync', (req, res) => {
     const { id, pos, ang, weapon, map, message } = req.body
-
-    if (!id) return res.status(400).json({ error: 'No ID provided' })
+    if (!id) return res.status(400).json({ error: 'no id' })
 
     players[id] = {
         pos: pos || { x: 0, y: 0, z: 0 },
@@ -28,13 +27,13 @@ app.post('/sync', (req, res) => {
 })
 
 app.get('/status', (req, res) => {
-    const list = Object.entries(players).map(([id, data]) => ({
+    const online = Object.entries(players).map(([id, data]) => ({
         id,
         map: data.map
     }))
-    res.json({ online: list })
+    res.json({ online })
 })
 
 app.listen(port, () => {
-    console.log(`✅ Server started on port ${port}`)
+    console.log(`server on ${port}`)
 })
