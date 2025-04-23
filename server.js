@@ -5,7 +5,9 @@ const port = 8080
 app.use(express.json())
 
 const players = {}
+const chatMessages = []
 const TIMEOUT = 20 * 1000
+const MAX_CHAT_MESSAGES = 50
 
 setInterval(() => {
     const currentTime = Date.now()
@@ -38,7 +40,26 @@ app.post('/sync', (req, res) => {
         if (pid !== id) others[pid] = data
     }
 
-    res.json({ players: others })
+    res.json({ players: others, chat: chatMessages })
+})
+
+app.post('/chat', (req, res) => {
+    const { id, nickname, message } = req.body
+    if (!id || !message || !nickname) return res.status(400).json({ error: 'Missing id, nickname, or message' })
+
+    const chatMessage = {
+        nickname: nickname,
+        message: message,
+        timestamp: Date.now()
+    }
+
+    chatMessages.push(chatMessage)
+    if (chatMessages.length > MAX_CHAT_MESSAGES) {
+        chatMessages.shift()
+    }
+
+    console.log(`Chat from ${nickname}: ${message}`)
+    res.json({ status: 'OK' })
 })
 
 app.get('/status', (req, res) => {
