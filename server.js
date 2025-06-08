@@ -11,7 +11,6 @@ const TIMEOUT = 6000
 const MAX_CHAT_MESSAGES = 50
 const MAX_PROPS = 1000
 
-// Generate unique prop IDs
 let propIdCounter = 0
 function generatePropId() {
     return `prop_${propIdCounter++}_${Date.now()}`
@@ -25,7 +24,6 @@ setInterval(() => {
             delete players[id]
         }
     }
-    // Clean up old props
     for (const propId in props) {
         if (now - props[propId].lastUpdate > TIMEOUT) {
             delete props[propId]
