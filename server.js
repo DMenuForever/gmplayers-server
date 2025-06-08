@@ -7,7 +7,7 @@ app.use(express.json())
 const players = {}
 const props = {}
 const chatMessages = []
-const TIMEOUT = 20000
+const TIMEOUT = 6000
 const MAX_CHAT_MESSAGES = 50
 const MAX_PROPS = 100
 
@@ -25,27 +25,26 @@ setInterval(() => {
 }, 5000)
 
 app.post('/sync', (req, res) => {
-    const { id, pos, ang, weapon, map, state, steamid, nickname, props: clientProps } = req.body
+    const { id, pos, ang, weapon, map, state, steamid, nickname, props: clientProps, health } = req.body
     if (!id) return res.status(400).json({ error: 'Missing ID' })
 
     players[id] = {
         pos, ang, weapon, map, state, steamid, nickname,
+        health: health !== undefined ? health : (players[id]?.health || 100),
         lastUpdate: Date.now()
     }
 
     if (clientProps) {
         for (const prop of clientProps) {
             if (!props[prop.id] && Object.keys(props).length >= MAX_PROPS) continue
-            if (!props[prop.id]) {
-                props[prop.id] = {
-                    model: prop.model,
-                    ownerId: id
-                }
+            props[prop.id] = {
+                model: prop.model,
+                ownerId: id,
+                pos: prop.pos,
+                ang: prop.ang,
+                velocity: prop.velocity || { x: 0, y: 0, z: 0 },
+                lastUpdate: Date.now()
             }
-            props[prop.id].pos = prop.pos
-            props[prop.id].ang = prop.ang
-            props[prop.id].velocity = prop.velocity || { x: 0, y: 0, z: 0 }
-            props[prop.id].lastUpdate = Date.now()
         }
     }
 
@@ -55,6 +54,20 @@ app.post('/sync', (req, res) => {
     }
 
     res.json({ players: otherPlayers, props, chat: chatMessages })
+})
+
+app.post('/damage', (req, res) => {
+    const { attackerId, victimId, damage } = req.body
+    if (!attackerId || !victimId || damage === undefined) {
+        return res.status(400).json({ error: 'Missing data' })
+    }
+    if (players[victimId]) {
+        players[victimId].health = math.max(0, players[victimId].health - damage)
+        console.log(`Player ${victimId} took ${damage} damage from ${attackerId}. Health: ${players[victimId].health}`)
+        res.json({ status: 'OK', health: players[victimId].health })
+    } else {
+        res.status(404).json({ error: 'Victim not found' })
+    }
 })
 
 app.post('/chat', (req, res) => {
@@ -76,7 +89,7 @@ app.post('/chat', (req, res) => {
 
 app.get('/status', (req, res) => {
     const online = Object.entries(players).map(([id, p]) => ({
-        id, nickname: p.nickname, steamid: p.steamid, map: p.map
+        id, nickname: p.nickname, steamid: p.steamid, map: p.map, health: p.health
     }))
     res.json({ online })
 })
