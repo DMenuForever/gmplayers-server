@@ -9,7 +9,7 @@ const props = {}
 const chatMessages = []
 const TIMEOUT = 6000
 const MAX_CHAT_MESSAGES = 50
-const MAX_PROPS = 100
+const MAX_PROPS = 1000 // Increased to handle more physics props
 
 setInterval(() => {
     const now = Date.now()
@@ -17,9 +17,7 @@ setInterval(() => {
         if (now - players[id].lastUpdate > TIMEOUT) {
             console.log(`Player ${id} timed out`)
             delete players[id]
-            for (const propId in props) {
-                if (props[propId].ownerId === id) delete props[propId]
-            }
+            // No prop deletion here since props are global
         }
     }
 }, 5000)
@@ -39,7 +37,6 @@ app.post('/sync', (req, res) => {
             if (!props[prop.id] && Object.keys(props).length >= MAX_PROPS) continue
             props[prop.id] = {
                 model: prop.model,
-                ownerId: id,
                 pos: prop.pos,
                 ang: prop.ang,
                 velocity: prop.velocity || { x: 0, y: 0, z: 0 },
@@ -62,7 +59,7 @@ app.post('/damage', (req, res) => {
         return res.status(400).json({ error: 'Missing data' })
     }
     if (players[victimId]) {
-        players[victimId].health = math.max(0, players[victimId].health - damage)
+        players[victimId].health = Math.max(0, players[victimId].health - damage)
         console.log(`Player ${victimId} took ${damage} damage from ${attackerId}. Health: ${players[victimId].health}`)
         res.json({ status: 'OK', health: players[victimId].health })
     } else {
