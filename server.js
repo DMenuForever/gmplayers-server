@@ -9,7 +9,13 @@ const props = {}
 const chatMessages = []
 const TIMEOUT = 6000
 const MAX_CHAT_MESSAGES = 50
-const MAX_PROPS = 1000 // Increased to handle more physics props
+const MAX_PROPS = 1000
+
+// Generate unique prop IDs
+let propIdCounter = 0
+function generatePropId() {
+    return `prop_${propIdCounter++}_${Date.now()}`
+}
 
 setInterval(() => {
     const now = Date.now()
@@ -17,7 +23,12 @@ setInterval(() => {
         if (now - players[id].lastUpdate > TIMEOUT) {
             console.log(`Player ${id} timed out`)
             delete players[id]
-            // No prop deletion here since props are global
+        }
+    }
+    // Clean up old props
+    for (const propId in props) {
+        if (now - props[propId].lastUpdate > TIMEOUT) {
+            delete props[propId]
         }
     }
 }, 5000)
@@ -34,8 +45,9 @@ app.post('/sync', (req, res) => {
 
     if (clientProps) {
         for (const prop of clientProps) {
-            if (!props[prop.id] && Object.keys(props).length >= MAX_PROPS) continue
-            props[prop.id] = {
+            const propId = prop.id || generatePropId()
+            if (!props[propId] && Object.keys(props).length >= MAX_PROPS) continue
+            props[propId] = {
                 model: prop.model,
                 pos: prop.pos,
                 ang: prop.ang,
