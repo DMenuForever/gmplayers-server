@@ -35,8 +35,14 @@ app.post('/sync', (req, res) => {
     const { id, pos, ang, weapon, map, state, steamid, nickname, props: clientProps, health } = req.body
     if (!id) return res.status(400).json({ error: 'Missing ID' })
 
+    // Обновляем только своего игрока
+    if (!players[id]) {
+        players[id] = { lastUpdate: Date.now() }
+    }
     players[id] = {
-        pos, ang, weapon, map, state, steamid, nickname,
+        pos: id === req.body.id ? pos : players[id].pos, // Только собственная позиция
+        ang: id === req.body.id ? ang : players[id].ang, // Только собственный угол
+        weapon, map, state, steamid, nickname,
         health: health !== undefined ? health : (players[id]?.health || 100),
         lastUpdate: Date.now()
     }
@@ -50,7 +56,8 @@ app.post('/sync', (req, res) => {
                 pos: prop.pos,
                 ang: prop.ang,
                 velocity: prop.velocity || { x: 0, y: 0, z: 0 },
-                lastUpdate: Date.now()
+                lastUpdate: Date.now(),
+                ownerId: id // Отмечаем владельца для проверки спавна
             }
         }
     }
