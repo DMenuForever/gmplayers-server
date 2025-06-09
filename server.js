@@ -7,7 +7,7 @@ app.use(express.json())
 const players = {}
 const props = {}
 const chatMessages = []
-const TIMEOUT = 6000
+const TIMEOUT = 6000 // Таймаут для игроков и пропов
 const MAX_CHAT_MESSAGES = 50
 const MAX_PROPS = 1000
 
@@ -20,7 +20,7 @@ setInterval(() => {
     const now = Date.now()
     for (const id in players) {
         if (now - players[id].lastUpdate > TIMEOUT) {
-            console.log(`Player ${id} timed out`)
+            console.log(`Player ${id} timed out and removed`)
             delete players[id]
         }
     }
@@ -57,7 +57,7 @@ app.post('/sync', (req, res) => {
                 ang: prop.ang,
                 velocity: prop.velocity || { x: 0, y: 0, z: 0 },
                 lastUpdate: Date.now(),
-                ownerId: id // Отмечаем владельца для проверки спавна
+                ownerId: id // Отмечаем владельца
             }
         }
     }
